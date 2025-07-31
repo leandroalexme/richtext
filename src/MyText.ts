@@ -9,6 +9,7 @@ import {
   getXOffsetForAlignment,
   lineHeightToDy
 } from './svg-utils';
+import { getMeasuringContext } from './fabric-utils';
 
 /**
  * Interface para propriedades de texto
@@ -81,12 +82,10 @@ export class MyText extends MyFabricObject {
   }
 
   /**
-   * Obtém um contexto para medição de texto
+   * Obtém um contexto para medição de texto (otimizado com canvas compartilhado)
    */
   protected _getMeasuringContext(): CanvasRenderingContext2D {
-    // Criar um canvas temporário para medição
-    const canvas = document.createElement('canvas');
-    return canvas.getContext('2d')!;
+    return getMeasuringContext();
   }
 
   /**

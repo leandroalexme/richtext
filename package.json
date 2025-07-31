@@ -1,15 +1,45 @@
 {
-  "name": "fabric-richtext-app",
-  "private": true,
-  "version": "0.0.0",
+  "name": "fabric-richtext-engine",
+  "version": "1.0.0",
+  "description": "Motor de texto rico com quebra de linha automática, baseado no Fabric.js",
   "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist/**/*",
+    "README.md"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "build:lib": "tsc",
+    "preview": "vite preview",
+    "demo": "npm run dev"
   },
+  "keywords": [
+    "canvas",
+    "text",
+    "richtext",
+    "fabric",
+    "typography",
+    "text-rendering",
+    "word-wrap",
+    "svg-export"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
   "devDependencies": {
     "typescript": "~5.8.3",
     "vite": "^7.0.4"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/leandroalexme/richtext.git"
   }
 }

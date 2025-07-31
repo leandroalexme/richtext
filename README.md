@@ -1,208 +1,270 @@
-# Rich Text Canvas Renderer
+# Fabric RichText Engine
 
-Sistema de renderização de texto com quebra de linha automática baseado no Fabric.js, portado para funcionar de forma standalone sem dependências.
+Motor de texto rico com quebra de linha automática, baseado no Fabric.js. Desenvolvido para ser facilmente integrado em projetos como o Suika.
 
-## 🎯 Objetivo
-
-Este projeto implementa uma versão simplificada do sistema de text rendering do Fabric.js, focada especificamente na renderização de texto com quebra de linha automática em Canvas HTML5, sem a necessidade de instalar a biblioteca completa do Fabric.js.
-
-## ✨ Funcionalidades
-
-- ✅ **Quebra de linha automática** baseada na largura definida
-- ✅ **Suporte a diferentes fontes**, tamanhos e estilos
-- ✅ **Alinhamento de texto** (left, center, right, justify)
-- ✅ **Quebra por palavra ou por caractere** (splitByGrapheme)
-- ✅ **Espaçamento entre caracteres** (charSpacing)
-- ✅ **Altura de linha customizável** (lineHeight)
-- ✅ **Cache de medições** para performance
-- ✅ **Sistema de classes hierárquico** (MyFabricObject → MyText → MyIText → MyTextbox)
-- ✅ **Interface simples** através da função `renderMyTextbox()`
-
-## 🚀 Como usar
-
-### Instalação e Setup
+## 🚀 Instalação
 
 ```bash
-# Clone o repositório
-git clone https://github.com/leandroalexme/richtext.git
-cd richtext
-
-# Instale as dependências
-npm install
-
-# Execute o projeto
-npm run dev
+npm install fabric-richtext-engine
 ```
 
-### Uso básico
+## 📋 Funcionalidades
+
+- ✅ **Quebra de linha automática** baseada na largura definida
+- ✅ **Múltiplos alinhamentos**: left, center, right, justify
+- ✅ **Quebra por caractere** para textos sem espaços
+- ✅ **Exportação SVG** com alta qualidade
+- ✅ **Renderização em Canvas** otimizada para High-DPI
+- ✅ **Sistema de estilos** completo (fonte, cor, peso, etc.)
+- ✅ **Performance otimizada** com medição de texto compartilhada
+
+## 🎯 Uso Básico
+
+### Importação
 
 ```typescript
-import { renderMyTextbox } from './src/textbox-renderer';
+import { MyTextbox, renderMyTextbox, exportTextboxAsSVG } from 'fabric-richtext-engine';
+```
 
-// Obter o contexto do canvas
-const canvas = document.getElementById('canvas') as HTMLCanvasElement;
-const ctx = canvas.getContext('2d')!;
+### Criar e Renderizar Textbox
 
-// Renderizar texto com quebra de linha
-renderMyTextbox(ctx, {
-  text: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-  x: 100,
-  y: 100,
+```typescript
+// Criar uma instância de textbox
+const textbox = new MyTextbox('Seu texto aqui', {
+  left: 100,
+  top: 100,
   width: 300,
   fontSize: 16,
   fontFamily: 'Arial',
-  fill: 'black'
+  fill: 'black',
+  textAlign: 'left',
+  lineHeight: 1.3
 });
+
+// Renderizar no canvas
+const canvas = document.getElementById('myCanvas') as HTMLCanvasElement;
+const ctx = canvas.getContext('2d')!;
+textbox.render(ctx);
 ```
 
-### Exemplo avançado
+### Função de Renderização Direta
 
 ```typescript
+// Renderizar diretamente sem instanciar classe
 renderMyTextbox(ctx, {
-  text: 'Texto longo que será quebrado automaticamente em várias linhas.',
+  text: 'Lorem ipsum dolor sit amet...',
   x: 50,
   y: 50,
   width: 250,
   fontSize: 18,
   fontFamily: 'Georgia',
-  fontWeight: 'bold',
-  fontStyle: 'italic',
   fill: 'blue',
   textAlign: 'justify',
-  lineHeight: 1.3,
-  charSpacing: 1,
-  splitByGrapheme: false,
-  minWidth: 20
+  lineHeight: 1.3
 });
 ```
 
-### Função simplificada
+### Exportação SVG
 
 ```typescript
-import { renderSimpleTextbox } from './src/textbox-renderer';
-
-renderSimpleTextbox(
-  ctx,
-  'Texto simples',
+// Exportar como SVG
+const svg = exportTextboxAsSVG({
+  text: 'Texto para exportar',
   x: 100,
   y: 100,
-  width: 200,
-  fontSize: 16
-);
+  width: 300,
+  fontSize: 16,
+  fontFamily: 'Arial',
+  fill: '#333',
+  textAlign: 'center'
+}, {
+  includeWrapper: true,
+  includeBounds: true,
+  includePosition: true
+});
+
+console.log(svg); // String SVG pronta para usar
 ```
+
+## 🔧 API Reference
+
+### MyTextbox
+
+```typescript
+class MyTextbox extends MyIText {
+  constructor(text: string, options: Partial<TextboxProps>)
+  
+  // Métodos principais
+  render(ctx: CanvasRenderingContext2D): void
+  toSVG(options?: SVGExportOptions): string
+  setWidth(width: number): this
+  set(properties: Partial<TextboxProps>): this
+}
+```
+
+### Propriedades Disponíveis
+
+```typescript
+interface TextboxProps {
+  // Posição e dimensões
+  left?: number;           // Posição X
+  top?: number;            // Posição Y  
+  width?: number;          // Largura do textbox
+  
+  // Estilo do texto
+  fontSize?: number;       // Tamanho da fonte
+  fontFamily?: string;     // Família da fonte
+  fontWeight?: string;     // Peso da fonte (normal, bold, etc.)
+  fontStyle?: string;      // Estilo da fonte (normal, italic)
+  fill?: string;           // Cor do texto
+  
+  // Layout do texto
+  textAlign?: 'left' | 'center' | 'right' | 'justify';
+  lineHeight?: number;     // Altura da linha (multiplier)
+  charSpacing?: number;    // Espaçamento entre caracteres
+  
+  // Comportamento
+  minWidth?: number;       // Largura mínima
+  splitByGrapheme?: boolean; // Quebrar por caractere
+}
+```
+
+### Funções de Utilidade
+
+```typescript
+// Renderização direta
+renderMyTextbox(ctx: CanvasRenderingContext2D, options: RenderTextboxOptions): void
+
+// Exportação SVG
+exportTextboxAsSVG(options: RenderTextboxOptions, svgOptions?: SVGExportOptions): string
+
+// Medição otimizada
+getMeasuringContext(): CanvasRenderingContext2D
+
+// Utilitários
+clone(obj: any): any
+extend(destination: any, ...sources: any[]): any
+degreesToRadians(degrees: number): number
+rotatePoint(point: Point, origin: Point, radians: number): Point
+```
+
+## 🎨 Integração no Suika
+
+Exemplo de como integrar no Suika:
+
+```typescript
+import { MyTextbox } from 'fabric-richtext-engine';
+
+class SuikaTextElement {
+  private textbox: MyTextbox;
+  
+  constructor(text: string, x: number, y: number, width: number) {
+    this.textbox = new MyTextbox(text, {
+      left: x,
+      top: y,
+      width: width,
+      fontSize: 16,
+      fontFamily: 'Arial'
+    });
+  }
+  
+  render(ctx: CanvasRenderingContext2D) {
+    this.textbox.render(ctx);
+  }
+  
+  updateText(newText: string) {
+    this.textbox.set({ text: newText });
+  }
+  
+  updatePosition(x: number, y: number) {
+    this.textbox.set({ left: x, top: y });
+  }
+  
+  exportAsSVG(): string {
+    return this.textbox.toSVG();
+  }
+}
+```
+
+## 🎮 Demo
+
+Para ver a demonstração em funcionamento:
+
+```bash
+npm run demo
+```
+
+Isso iniciará uma aplicação de demonstração com:
+- Canvas fullscreen
+- Textos arrastáveis
+- Zoom com scroll
+- Pan com botão do meio
+- Exportação SVG
 
 ## 🏗️ Arquitetura
 
-O projeto segue uma abordagem incremental "de baixo para cima", portando seletivamente apenas as funcionalidades essenciais do Fabric.js:
-
-### Classes principais
-
-1. **`Point`** - Classe para manipulação de coordenadas 2D
-2. **`MyFabricObject`** - Classe base para objetos gráficos
-3. **`MyText`** - Renderização básica de texto
-4. **`MyIText`** - Extensão com propriedades de texto interativo (interface apenas)
-5. **`MyTextbox`** - Implementação completa com quebra de linha automática
-
-### Utilitários
-
-- **`fabric-utils.ts`** - Funções utilitárias essenciais portadas do Fabric.js
-- **`textbox-renderer.ts`** - Interface pública para renderização
-
-## 📝 API
-
-### renderMyTextbox(ctx, options)
-
-Renderiza um textbox com quebra de linha automática.
-
-#### Parâmetros
-
-| Propriedade | Tipo | Padrão | Descrição |
-|------------|------|--------|-----------|
-| `text` | `string` | - | **Obrigatório**. Texto a ser renderizado |
-| `x` | `number` | - | **Obrigatório**. Posição X |
-| `y` | `number` | - | **Obrigatório**. Posição Y |
-| `width` | `number` | - | **Obrigatório**. Largura máxima |
-| `fontSize` | `number` | `40` | Tamanho da fonte em pixels |
-| `fontFamily` | `string` | `'Arial'` | Família da fonte |
-| `fontWeight` | `string\|number` | `'normal'` | Peso da fonte |
-| `fontStyle` | `string` | `'normal'` | Estilo da fonte |
-| `fill` | `string` | `'black'` | Cor do texto |
-| `textAlign` | `string` | `'left'` | Alinhamento (`'left'`, `'center'`, `'right'`, `'justify'`) |
-| `lineHeight` | `number` | `1.16` | Altura da linha (multiplicador) |
-| `charSpacing` | `number` | `0` | Espaçamento entre caracteres |
-| `minWidth` | `number` | `20` | Largura mínima |
-| `splitByGrapheme` | `boolean` | `false` | Quebrar por caractere individual |
-
-## 🧪 Exemplos de teste
-
-O projeto inclui vários exemplos que demonstram diferentes funcionalidades:
-
-1. **Textbox básico** - Renderização simples com quebra de linha
-2. **Configurações avançadas** - Texto justificado com configurações customizadas
-3. **Texto longo** - Demonstração de quebra automática
-4. **Fonte grande** - Texto com fonte grande e negrito
-5. **Quebra por caractere** - Palavras muito longas quebradas caractere por caractere
-
-## 🔧 Desenvolvimento
-
-### Estrutura do projeto
+O projeto está organizado para separar claramente o **motor** da **demonstração**:
 
 ```
 src/
-├── Point.ts              # Classe para coordenadas 2D
-├── fabric-utils.ts       # Utilitários portados do Fabric.js
-├── MyFabricObject.ts     # Classe base para objetos gráficos
-├── MyText.ts            # Renderização básica de texto
-├── MyIText.ts           # Extensão com propriedades interativas
-├── MyTextbox.ts         # Implementação com quebra de linha
-├── textbox-renderer.ts  # Interface pública
-└── main.ts              # Exemplo de uso e testes
+├── index.ts              # 🎯 Ponto de entrada da biblioteca
+├── MyFabricObject.ts     # Classe base para objetos
+├── MyText.ts             # Classe de texto básico
+├── MyIText.ts            # Classe de texto interativo
+├── MyTextbox.ts          # Classe de textbox com quebra de linha
+├── textbox-renderer.ts   # Funções de renderização
+├── svg-utils.ts          # Utilitários para exportação SVG
+├── fabric-utils.ts       # Utilitários gerais
+├── demo.ts               # 📱 Aplicação de demonstração
+└── main.ts               # Entrada da demo
 ```
 
-### Scripts disponíveis
+## 🛠️ Build
 
 ```bash
-npm run dev     # Servidor de desenvolvimento
-npm run build   # Build para produção
-npm run preview # Preview da build
+# Build da biblioteca
+npm run build:lib
+
+# Build da demo
+npm run build
+
+# Desenvolvimento
+npm run dev
 ```
 
-## 🎨 Demonstração
+## 📦 Estrutura do Pacote
 
-O projeto inclui uma página de demonstração que mostra:
+Quando publicado, o pacote terá:
 
-- Quadrado arrastável vermelho
-- Vários exemplos de textboxes com diferentes configurações
-- Testes das funções utilitárias no console
-- Interface responsiva
+```
+dist/
+├── index.js              # Ponto de entrada compilado
+├── index.d.ts            # Tipos TypeScript
+├── MyTextbox.js          # Classes compiladas
+├── MyTextbox.d.ts        # Tipos das classes
+└── ...                   # Outros arquivos compilados
+```
 
-Acesse `http://localhost:5173` após executar `npm run dev`.
+## 🔄 Uso no Suika
 
-## 🔍 Inspiração
+Para integrar no Suika, você importaria apenas o que precisa:
 
-Este projeto foi inspirado no [Fabric.js](http://fabricjs.com/), especificamente nas classes:
-- `fabric.Text`
-- `fabric.IText` 
-- `fabric.Textbox`
+```typescript
+// Apenas as classes essenciais
+import { MyTextbox } from 'fabric-richtext-engine';
+
+// Ou funções específicas
+import { renderMyTextbox, exportTextboxAsSVG } from 'fabric-richtext-engine';
+```
+
+**Vantagens:**
+- ✅ API limpa e focada
+- ✅ Tree-shaking automático 
+- ✅ Tipagem completa
+- ✅ Zero dependências externas
+- ✅ Performance otimizada
+- ✅ Fácil integração
 
 ## 📄 Licença
 
-Este projeto é de código aberto e está disponível sob a licença MIT.
-
-## 🤝 Contribuições
-
-Contribuições são bem-vindas! Sinta-se à vontade para:
-
-1. Fazer fork do projeto
-2. Criar uma branch para sua feature
-3. Commit suas mudanças
-4. Push para a branch
-5. Abrir um Pull Request
-
-## 📞 Contato
-
-Para dúvidas ou sugestões sobre este projeto, sinta-se à vontade para abrir uma issue no GitHub.
-
----
-
-**Desenvolvido com ❤️ usando TypeScript, Vite e inspirado no Fabric.js** 
+MIT License - veja o arquivo LICENSE para detalhes. 

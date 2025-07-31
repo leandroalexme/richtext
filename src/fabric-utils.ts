@@ -343,4 +343,19 @@ export const typeOf = {
   isUndefined,
   isNull,
   isNil
-}; 
+};
+
+// Canvas compartilhado para medição de texto (otimização de performance)
+let measuringContext: CanvasRenderingContext2D | null = null;
+
+/**
+ * Retorna um contexto de canvas compartilhado para medição de texto
+ * Isso evita criar múltiplos canvas temporários e melhora a performance
+ */
+export function getMeasuringContext(): CanvasRenderingContext2D {
+  if (!measuringContext) {
+    const canvas = document.createElement('canvas');
+    measuringContext = canvas.getContext('2d')!;
+  }
+  return measuringContext;
+} 
