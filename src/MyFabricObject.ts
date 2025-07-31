@@ -52,6 +52,48 @@ export class MyFabricObject extends EventEmitter {
   }
 
   /**
+   * Exporta o objeto como SVG
+   * Este é um método base que deve ser sobrescrito nas subclasses
+   * que implementam renderização específica
+   * 
+   * @returns String SVG representando o objeto
+   */
+  toSVG(): string {
+    // Implementação base - retorna um comentário SVG
+    // As subclasses devem sobrescrever este método para gerar SVG específico
+    return `<!-- MyFabricObject: implementação de toSVG() deve ser sobrescrita nas subclasses -->`;
+  }
+
+  /**
+   * Gera os atributos SVG básicos comuns a todos os objetos
+   * @protected
+   */
+  protected _getSVGBaseAttributes(): string {
+    const attributes: string[] = [];
+    
+    if (this.opacity !== 1) {
+      attributes.push(`opacity="${this.opacity}"`);
+    }
+    
+    if (!this.visible) {
+      attributes.push(`visibility="hidden"`);
+    }
+    
+    return attributes.join(' ');
+  }
+
+  /**
+   * Gera a tag de transformação SVG para posicionamento
+   * @protected
+   */
+  protected _getSVGTransform(): string {
+    if (this.left === 0 && this.top === 0) {
+      return '';
+    }
+    return `transform="translate(${this.left}, ${this.top})"`;
+  }
+
+  /**
    * Define múltiplas propriedades do objeto
    */
   set(properties: Partial<MyFabricObject>): this {

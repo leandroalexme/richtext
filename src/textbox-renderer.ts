@@ -26,6 +26,15 @@ export interface RenderTextboxOptions {
 }
 
 /**
+ * Opções para exportação SVG
+ */
+export interface SVGExportOptions {
+  includeWrapper?: boolean;
+  includePosition?: boolean;
+  includeBounds?: boolean;
+}
+
+/**
  * Função principal para renderizar um textbox com quebra de linha automática
  * 
  * @param ctx - Contexto 2D do canvas
@@ -87,6 +96,69 @@ export function renderMyTextbox(
 }
 
 /**
+ * Função para exportar textbox como SVG
+ * 
+ * @param options - Opções de configuração do texto
+ * @param svgOptions - Opções específicas para exportação SVG
+ * @returns String SVG representando o textbox
+ * 
+ * @example
+ * ```typescript
+ * const svg = exportTextboxAsSVG({
+ *   text: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+ *   x: 100,
+ *   y: 100,
+ *   width: 300,
+ *   fontSize: 16,
+ *   fontFamily: 'Arial',
+ *   fill: 'black'
+ * });
+ * console.log(svg);
+ * ```
+ */
+export function exportTextboxAsSVG(
+  options: RenderTextboxOptions,
+  svgOptions: SVGExportOptions = {}
+): string {
+  const {
+    text,
+    x,
+    y,
+    width,
+    fontSize = 40,
+    fontFamily = 'Arial',
+    fontWeight = 'normal',
+    fontStyle = 'normal',
+    fill = 'black',
+    textAlign = 'left',
+    lineHeight = 1.16,
+    charSpacing = 0,
+    minWidth = 20,
+    splitByGrapheme = false
+  } = options;
+
+  // Criar uma instância do MyTextbox
+  const textbox = new MyTextbox(text, {
+    left: x,
+    top: y,
+    width: width,
+    fontSize: fontSize,
+    fontFamily: fontFamily,
+    fontWeight: fontWeight,
+    fontStyle: fontStyle,
+    fill: fill,
+    textAlign: textAlign,
+    lineHeight: lineHeight,
+    charSpacing: charSpacing,
+    minWidth: minWidth,
+    splitByGrapheme: splitByGrapheme
+  } as Partial<FullTextboxProps>);
+
+  // Exportar como SVG
+  return textbox.toSVG(svgOptions);
+}
+
+/**
  * Versão simplificada para casos básicos
  */
 export function renderSimpleTextbox(
@@ -106,6 +178,28 @@ export function renderSimpleTextbox(
     fontFamily: 'Arial',
     fill: 'black'
   });
+}
+
+/**
+ * Versão simplificada para exportação SVG
+ */
+export function exportSimpleTextboxAsSVG(
+  text: string,
+  x: number,
+  y: number,
+  width: number,
+  fontSize: number = 16,
+  svgOptions: SVGExportOptions = {}
+): string {
+  return exportTextboxAsSVG({
+    text,
+    x,
+    y,
+    width,
+    fontSize,
+    fontFamily: 'Arial',
+    fill: 'black'
+  }, svgOptions);
 }
 
 /**
@@ -170,12 +264,43 @@ export class TextboxRenderer {
   }
 
   /**
+   * Exporta um textbox como SVG por ID
+   */
+  exportAsSVG(id: string, svgOptions: SVGExportOptions = {}): string {
+    const textbox = this.textboxes.get(id);
+    if (textbox) {
+      return textbox.toSVG(svgOptions);
+    }
+    return '';
+  }
+
+  /**
    * Renderiza todos os textboxes
    */
   renderAll(ctx: CanvasRenderingContext2D): void {
     for (const textbox of this.textboxes.values()) {
       textbox.render(ctx);
     }
+  }
+
+  /**
+   * Exporta todos os textboxes como um único SVG
+   */
+  exportAllAsSVG(svgOptions: SVGExportOptions = {}): string {
+    const svgElements: string[] = [];
+    
+    for (const textbox of this.textboxes.values()) {
+      const svg = textbox.toSVG({ ...svgOptions, includeWrapper: false });
+      if (svg) {
+        svgElements.push(svg);
+      }
+    }
+    
+    if (svgOptions.includeWrapper !== false) {
+      return `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">\n${svgElements.join('\n')}\n</svg>`;
+    }
+    
+    return svgElements.join('\n');
   }
 
   /**

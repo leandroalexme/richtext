@@ -1,4 +1,14 @@
 import { MyFabricObject } from './MyFabricObject';
+import {
+  createSVGWrapper,
+  createSVGGroup,
+  createSVGElement,
+  createTextSpan,
+  fontPropsToSVG,
+  getTextAnchorForAlignment,
+  getXOffsetForAlignment,
+  lineHeightToDy
+} from './svg-utils';
 
 /**
  * Interface para propriedades de texto
@@ -147,6 +157,104 @@ export class MyText extends MyFabricObject {
         currentX += ctx.measureText(char).width + this.charSpacing;
       }
     }
+  }
+
+  /**
+   * Exporta o texto como SVG
+   * @param options Opções adicionais para o SVG
+   * @returns String SVG representando o texto
+   */
+  toSVG(options: { 
+    includeWrapper?: boolean;
+    includePosition?: boolean;
+  } = {}): string {
+    const { includeWrapper = true, includePosition = true } = options;
+
+    if (!this.text || !this._textLines.length) {
+      return includeWrapper ? createSVGWrapper('') : '';
+    }
+
+    // Gerar os tspans para cada linha
+    const tspans: string[] = [];
+    const xOffset = getXOffsetForAlignment(this.textAlign, this.width);
+    
+    for (let i = 0; i < this._textLines.length; i++) {
+      const line = this._textLines[i];
+      const isFirstLine = i === 0;
+      
+      if (line || isFirstLine) { // Incluir linhas vazias se não for a primeira
+        const tspanAttributes: Record<string, string | number | undefined> = {
+          x: xOffset,
+          dy: lineHeightToDy(this.lineHeight, this.fontSize, isFirstLine)
+        };
+
+        // Adicionar espaçamento de caracteres se necessário
+        if (this.charSpacing !== 0) {
+          tspanAttributes['letter-spacing'] = `${this.charSpacing}px`;
+        }
+
+        tspans.push(createTextSpan(line, tspanAttributes));
+      }
+    }
+
+    // Atributos da tag <text> principal
+    const fontAttributes = fontPropsToSVG({
+      fontFamily: this.fontFamily,
+      fontSize: this.fontSize,
+      fontWeight: this.fontWeight,
+      fontStyle: this.fontStyle,
+      fill: this.fill,
+      stroke: this.stroke,
+      strokeWidth: this.strokeWidth
+    });
+
+    const baseAttributes = this._getSVGBaseAttributes();
+    const textAttributes: Record<string, string | number | undefined> = {
+      ...fontAttributes,
+      'text-anchor': getTextAnchorForAlignment(this.textAlign),
+      'dominant-baseline': 'text-before-edge'
+    };
+
+    // Adicionar atributos base se existirem
+    if (baseAttributes) {
+      const baseAttrs = baseAttributes.split(' ');
+      baseAttrs.forEach(attr => {
+        const [key, value] = attr.split('=');
+        if (key && value) {
+          textAttributes[key] = value.replace(/['"]/g, '');
+        }
+      });
+    }
+
+    // Remover atributos undefined
+    Object.keys(textAttributes).forEach(key => {
+      if (textAttributes[key as keyof typeof textAttributes] === undefined) {
+        delete textAttributes[key as keyof typeof textAttributes];
+      }
+    });
+
+    const textElement = createSVGElement('text', textAttributes, tspans.join('\n  '));
+
+    // Envolver em grupo com transformação se necessário
+    let content = textElement;
+    if (includePosition && (this.left !== 0 || this.top !== 0)) {
+      const transform = this._getSVGTransform();
+      content = createSVGGroup(textElement, transform);
+    }
+
+    // Retornar com ou sem wrapper SVG
+    if (includeWrapper) {
+      const totalWidth = Math.max(this.width + this.left, 100);
+      const totalHeight = Math.max(this.height + this.top, 50);
+      
+      return createSVGWrapper(content, {
+        width: totalWidth,
+        height: totalHeight,
+        viewBox: `0 0 ${totalWidth} ${totalHeight}`
+      });
+    }
+
+    return content;
   }
 
   /**

@@ -1,5 +1,15 @@
 import { MyIText } from './MyIText';
 import type { ITextProps } from './MyIText';
+import {
+  createSVGWrapper,
+  createSVGGroup,
+  createSVGElement,
+  createTextSpan,
+  fontPropsToSVG,
+  getTextAnchorForAlignment,
+  getXOffsetForAlignment,
+  lineHeightToDy
+} from './svg-utils';
 
 /**
  * Interface para propriedades do Textbox
@@ -142,6 +152,120 @@ export class MyTextbox extends MyIText {
     // No Textbox, usamos _wrapText() em vez de _splitTextIntoLines()
     // porque precisamos considerar a largura para quebra
     this._wrapText();
+  }
+
+  /**
+   * Exporta o textbox como SVG com quebra de linha automática
+   * @param options Opções adicionais para o SVG
+   * @returns String SVG representando o textbox
+   */
+  toSVG(options: { 
+    includeWrapper?: boolean;
+    includePosition?: boolean;
+    includeBounds?: boolean;
+  } = {}): string {
+    const { includeWrapper = true, includePosition = true, includeBounds = false } = options;
+
+    if (!this.text || !this._wrappedTextLines.length) {
+      return includeWrapper ? createSVGWrapper('') : '';
+    }
+
+    // Gerar os tspans para cada linha quebrada
+    const tspans: string[] = [];
+    const xOffset = getXOffsetForAlignment(this.textAlign, this.width);
+    
+    for (let i = 0; i < this._wrappedTextLines.length; i++) {
+      const line = this._wrappedTextLines[i];
+      const isFirstLine = i === 0;
+      
+      if (line || isFirstLine) {
+        const tspanAttributes: Record<string, string | number | undefined> = {
+          x: xOffset,
+          dy: lineHeightToDy(this.lineHeight, this.fontSize, isFirstLine)
+        };
+
+        // Adicionar espaçamento de caracteres se necessário
+        if (this.charSpacing !== 0) {
+          tspanAttributes['letter-spacing'] = `${this.charSpacing}px`;
+        }
+
+        tspans.push(createTextSpan(line, tspanAttributes));
+      }
+    }
+
+    // Atributos da tag <text> principal
+    const fontAttributes = fontPropsToSVG({
+      fontFamily: this.fontFamily,
+      fontSize: this.fontSize,
+      fontWeight: this.fontWeight,
+      fontStyle: this.fontStyle,
+      fill: this.fill,
+      stroke: this.stroke,
+      strokeWidth: this.strokeWidth
+    });
+
+    const baseAttributes = this._getSVGBaseAttributes();
+    const textAttributes: Record<string, string | number | undefined> = {
+      ...fontAttributes,
+      'text-anchor': getTextAnchorForAlignment(this.textAlign),
+      'dominant-baseline': 'text-before-edge'
+    };
+
+    // Adicionar atributos base se existirem
+    if (baseAttributes) {
+      const baseAttrs = baseAttributes.split(' ');
+      baseAttrs.forEach(attr => {
+        const [key, value] = attr.split('=');
+        if (key && value) {
+          textAttributes[key] = value.replace(/['"]/g, '');
+        }
+      });
+    }
+
+    // Remover atributos undefined
+    Object.keys(textAttributes).forEach(key => {
+      if (textAttributes[key as keyof typeof textAttributes] === undefined) {
+        delete textAttributes[key as keyof typeof textAttributes];
+      }
+    });
+
+    const textElement = createSVGElement('text', textAttributes, tspans.join('\n  '));
+
+    // Opcional: incluir retângulo de bounds para debug/visualização
+    let content = textElement;
+    if (includeBounds) {
+      const boundsRect = createSVGElement('rect', {
+        x: 0,
+        y: 0,
+        width: this.width,
+        height: this.height,
+        fill: 'none',
+        stroke: '#cccccc',
+        'stroke-width': 1,
+        'stroke-dasharray': '2,2'
+      });
+      content = boundsRect + '\n' + textElement;
+    }
+
+    // Envolver em grupo com transformação se necessário
+    if (includePosition && (this.left !== 0 || this.top !== 0)) {
+      const transform = this._getSVGTransform();
+      content = createSVGGroup(content, transform);
+    }
+
+    // Retornar com ou sem wrapper SVG
+    if (includeWrapper) {
+      const totalWidth = Math.max(this.width + this.left, this.minWidth || 100);
+      const totalHeight = Math.max(this.height + this.top, 50);
+      
+      return createSVGWrapper(content, {
+        width: totalWidth,
+        height: totalHeight,
+        viewBox: `0 0 ${totalWidth} ${totalHeight}`
+      });
+    }
+
+    return content;
   }
 
   /**
