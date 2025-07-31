@@ -8,8 +8,8 @@ import {
   getTextAnchorForAlignment,
   getXOffsetForAlignment,
   lineHeightToDy
-} from './svg-utils';
-import { getMeasuringContext } from './fabric-utils';
+} from '../utils/svg-utils';
+import { getMeasuringContext } from '../utils/fabric-utils';
 
 /**
  * Interface para propriedades de texto

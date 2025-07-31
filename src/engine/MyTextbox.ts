@@ -9,7 +9,7 @@ import {
   getTextAnchorForAlignment,
   getXOffsetForAlignment,
   lineHeightToDy
-} from './svg-utils';
+} from '../utils/svg-utils';
 
 /**
  * Interface para propriedades do Textbox

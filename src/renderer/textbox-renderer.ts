@@ -1,6 +1,6 @@
-import { MyTextbox } from './MyTextbox';
-import type { TextboxProps } from './MyTextbox';
-import type { MyFabricObject } from './MyFabricObject';
+import { MyTextbox } from '../engine/MyTextbox';
+import type { TextboxProps } from '../engine/MyTextbox';
+import type { MyFabricObject } from '../engine/MyFabricObject';
 
 // Tipo que combina as propriedades do MyFabricObject com TextboxProps
 type FullTextboxProps = TextboxProps & Pick<MyFabricObject, 'left' | 'top' | 'width' | 'height' | 'fill'>;

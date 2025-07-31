@@ -1,4 +1,4 @@
-import { EventEmitter } from './fabric-utils';
+import { EventEmitter } from '../utils/fabric-utils';
 
 /**
  * MyFabricObject - Versão super simplificada do FabricObject

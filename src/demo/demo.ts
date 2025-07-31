@@ -1,7 +1,7 @@
 // src/demo.ts
 // Lógica da aplicação de demonstração - separada do motor de texto
 
-import './style.css';
+import '../style.css';
 import { 
   clone, 
   extend, 
@@ -9,16 +9,13 @@ import {
   rotatePoint, 
   capitalize, 
   parseUnit,
-  typeOf,
-  EventEmitter 
-} from './fabric-utils';
+  typeOf
+} from '../utils/fabric-utils';
 import { 
-  renderMyTextbox, 
-  renderSimpleTextbox,
   exportTextboxAsSVG,
   exportSimpleTextboxAsSVG
-} from './textbox-renderer';
-import { MyTextbox } from './MyTextbox';
+} from '../renderer/textbox-renderer';
+import { MyTextbox } from '../engine/MyTextbox';
 
 // Estado do viewport (zoom e pan)
 interface ViewportState {
